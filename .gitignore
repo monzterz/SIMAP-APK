@@ -1,0 +1,13 @@
+*.iml
+.gradle/
+.kotlin/
+local.properties
+.idea/
+build/
+app/release.keystore
+app/keystore.properties
+captures/
+.DS_Store
+
+# mockup lama (kanonik ada di repo web / UI APP/code.html)
+ui-skeleton.html
