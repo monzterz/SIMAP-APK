@@ -30,6 +30,17 @@ class AuthRepository(
         }
     }
 
+
+    /** Segarkan data user tersimpan (mis. foto profil baru) tanpa mengubah token. */
+    suspend fun refreshUser() {
+        val t = session.token ?: return
+        try {
+            session.saveSession(t, api.me().user)
+        } catch (e: Exception) {
+            // offline / token kedaluwarsa: pakai data cache apa adanya
+        }
+    }
+
     fun currentUser(): User? = session.currentUser()
 
     fun logout() {

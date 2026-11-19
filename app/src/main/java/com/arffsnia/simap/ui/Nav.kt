@@ -6,6 +6,7 @@ import androidx.compose.material.icons.rounded.Assignment
 import androidx.compose.material.icons.rounded.Email
 import androidx.compose.material.icons.rounded.FormatListBulleted
 import androidx.compose.material.icons.rounded.Home
+import androidx.compose.material.icons.rounded.Inventory2
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.QrCodeScanner
 import androidx.compose.material.icons.rounded.Verified
@@ -47,7 +48,7 @@ object RoleNav {
             NavItem("home", "Beranda", Icons.Rounded.Home, Screen.Home),
             NavItem("scan", "Cek", Icons.Rounded.QrCodeScanner, Screen.Scan),
             NavItem("daftar", "Daftar", Icons.Rounded.FormatListBulleted, Screen.Assets),
-            NavItem("notif", "Notif", Icons.Rounded.Notifications, Screen.Missing),
+            NavItem("notif", "Notif", Icons.Rounded.Notifications, Screen.Notif),
             NavItem("lainnya", "Lainnya", Icons.Rounded.Apps, Screen.More),
         )
 
@@ -55,7 +56,7 @@ object RoleNav {
             NavItem("home", "Beranda", Icons.Rounded.Home, Screen.Home),
             NavItem("penugasan", "Penugasan", Icons.Rounded.Assignment, Screen.Penugasan),
             NavItem("daftar", "Daftar", Icons.Rounded.FormatListBulleted, Screen.Assets),
-            NavItem("notif", "Notif", Icons.Rounded.Notifications, Screen.Missing),
+            NavItem("notif", "Notif", Icons.Rounded.Notifications, Screen.Notif),
             NavItem("lainnya", "Lainnya", Icons.Rounded.Apps, Screen.More),
         )
 
@@ -63,7 +64,7 @@ object RoleNav {
             NavItem("home", "Beranda", Icons.Rounded.Home, Screen.Home),
             NavItem("penugasan", "Penugasan", Icons.Rounded.Assignment, Screen.Penugasan),
             NavItem("validasi", "Validasi", Icons.Rounded.Verified, Screen.Validasi),
-            NavItem("pengingat", "Pengingat", Icons.Rounded.Email, Screen.Pengingat),
+            NavItem("aset", "Data Aset", Icons.Rounded.Inventory2, Screen.DataAset),
             NavItem("lainnya", "Lainnya", Icons.Rounded.Apps, Screen.More),
         )
     }

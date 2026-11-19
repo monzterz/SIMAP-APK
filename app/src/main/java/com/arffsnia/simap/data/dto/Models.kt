@@ -68,6 +68,9 @@ data class Asset(
     val checks: Checks?,
     @SerializedName("foto_url") val fotoUrl: String?,
     val qrcode: String?,
+    val status: String? = null,
+    val merek: String? = null,
+    @SerializedName("last_checked") val lastChecked: String? = null,
     @SerializedName("updated_at") val updatedAt: String?,
 )
 
@@ -75,7 +78,17 @@ data class AssetsResponse(
     val page: Int,
     val limit: Int,
     val total: Int,
+    val stats: AssetStats = AssetStats(),
     val items: List<Asset>,
+)
+
+data class AssetStats(
+    val aktif: Int = 0,
+    val maintenance: Int = 0,
+    val rusak: Int = 0,
+    val total: Int = 0,
+    val lokasi: Int = 0,
+    val jenis: Int = 0,
 )
 
 // ===== Checklist =====
@@ -110,6 +123,7 @@ data class AssetDetail(
     val coords: Coords?,
     @SerializedName("foto_url") val fotoUrl: String?,
     val qrcode: String?,
+    @SerializedName("created_at") val createdAt: String? = null,
     @SerializedName("updated_at") val updatedAt: String?,
     val template: List<ChecklistItem>?,
     @SerializedName("latest_check") val latestCheck: LatestCheck?,
@@ -119,8 +133,30 @@ data class LatestCheck(
     val result: Map<String, String?>?,
     @SerializedName("result_json") val resultJson: String?,
     @SerializedName("checked_at") val checkedAt: String?,
+    val user: String? = null,
+    val periode: String? = null,
     @SerializedName("is_legacy") val isLegacy: Int?,
     val coords: Coords?,
+)
+
+// ===== Riwayat pengecekan aset (api/assets/history.php) =====
+data class AssetHistoryResponse(
+    val slug: String = "",
+    val nama: String = "",
+    val tahun: List<Int> = emptyList(),
+    val total: Int = 0,
+    val items: List<AssetHistoryItem> = emptyList(),
+)
+
+data class AssetHistoryItem(
+    val id: Int = 0,
+    @SerializedName("checked_at") val checkedAt: String? = null,
+    val user: String = "",
+    val level: String = "",
+    val periode: String = "",
+    val checks: Map<String, String?> = emptyMap(),
+    @SerializedName("foto_url") val fotoUrl: String? = null,
+    val coords: Coords? = null,
 )
 
 // ===== Save check =====
@@ -206,6 +242,89 @@ data class Penugasan(
 
 data class PenugasanListResponse(val items: List<Penugasan>)
 
+// ===== Penugasan: form tambah/edit =====
+
+/** Data pendukung form: regu penanggung jawab, zonasi & lokasi tambahan. */
+data class ZonasiOpt(
+    val id: Int,
+    val nama: String,
+    val warna: String? = null,
+    val lantai: String? = null,
+    val poly: List<List<Double>> = emptyList(),
+)
+
+data class PeriodeOpt(
+    val id: Int,
+    val nama: String,
+    @SerializedName("bulan_mulai") val bulanMulai: Int = 0,
+    @SerializedName("bulan_selesai") val bulanSelesai: Int = 0,
+)
+
+data class PenugasanOptions(
+    val regu: List<SimpleItem> = emptyList(),
+    val zonasi: List<ZonasiOpt> = emptyList(),
+    val rooms: List<SimpleItem> = emptyList(),
+    val periode: List<PeriodeOpt> = emptyList(),
+)
+
+/** Body POST penugasan/create.php (tanpa id) dan penugasan/update.php (dengan id). */
+data class PenugasanSaveRequest(
+    val id: Int? = null,
+    val nama: String,
+    @SerializedName("regu_id") val reguId: Int,
+    @SerializedName("tanggal_mulai") val tanggalMulai: String,
+    @SerializedName("tanggal_selesai") val tanggalSelesai: String,
+    val keterangan: String? = null,
+    val status: String? = null,
+    @SerializedName("zonasi_ids") val zonasiIds: List<Int>,
+    @SerializedName("room_ids") val roomIds: List<Int> = emptyList(),
+)
+
+data class PenugasanIdRequest(val id: Int)
+
+// ===== Detail penugasan: daftar aset + filter =====
+
+data class PenugasanAset(
+    val id: Int,
+    val slug: String,
+    val nama: String,
+    val merek: String? = null,
+    val lokasi: String? = null,
+    @SerializedName("category_id") val categoryId: Int = 0,
+    val kategori: String? = null,
+    val checked: Boolean = false,
+    @SerializedName("checked_at") val checkedAt: String? = null,
+    @SerializedName("checked_by") val checkedBy: String? = null,
+    @SerializedName("checked_regu") val checkedRegu: String? = null,
+)
+
+data class PenugasanKategori(val id: Int, val nama: String, val n: Int = 0)
+
+data class PenugasanMinggu(val n: Int, val mulai: String?, val selesai: String?)
+
+data class PenugasanFilterCount(val total: Int = 0, val sudah: Int = 0, val belum: Int = 0)
+
+data class PenugasanAssetsResponse(
+    val id: Int,
+    val nama: String,
+    val regu: String? = null,
+    @SerializedName("tanggal_mulai") val tanggalMulai: String? = null,
+    @SerializedName("tanggal_selesai") val tanggalSelesai: String? = null,
+    val status: String? = null,
+    val total: Int = 0,
+    val checked: Int = 0,
+    val persen: Int = 0,
+    @SerializedName("dari_filter") val dariFilter: PenugasanFilterCount = PenugasanFilterCount(),
+    val kategori: List<PenugasanKategori> = emptyList(),
+    val minggu: List<PenugasanMinggu> = emptyList(),
+    val zonasi: List<String> = emptyList(),
+    val page: Int = 1,
+    val limit: Int = 10,
+    val pages: Int = 1,
+    val hits: Int = 0,
+    val items: List<PenugasanAset> = emptyList(),
+)
+
 data class PenugasanBreakdown(
     val nama: String,
     val n: Int,
@@ -226,6 +345,8 @@ data class PenugasanDetail(
     val checked: Int,
     val persen: Int,
     val breakdown: List<PenugasanBreakdown>,
+    @SerializedName("zonasi_ids") val zonasiIds: List<Int> = emptyList(),
+    @SerializedName("room_ids") val roomIds: List<Int> = emptyList(),
 )
 
 // ===== Validasi (pengajuan) =====
@@ -248,6 +369,56 @@ data class ValidasiItem(
 data class ValidasiResponse(
     val pending: List<ValidasiItem>,
     val riwayat: List<ValidasiItem>,
+)
+
+/** Detail satu pengajuan (api/validasi/show.php) termasuk isi data_json. */
+data class ValidasiDetail(
+    val id: Int,
+    val tipe: String? = null,
+    val aksi: String? = null,
+    @SerializedName("target_id") val targetId: Int? = null,
+    val status: String? = null,
+    @SerializedName("requested_by") val requestedBy: Int? = null,
+    @SerializedName("reviewed_by") val reviewedBy: Int? = null,
+    val catatan: String? = null,
+    @SerializedName("created_at") val createdAt: String? = null,
+    @SerializedName("reviewed_at") val reviewedAt: String? = null,
+    val data: Map<String, Any>? = null,
+)
+
+// ===== Pusat Notifikasi =====
+data class NotifRingkasan(
+    val total: Int = 0,
+    val belum: Int = 0,
+    @SerializedName("tanpa_foto") val tanpaFoto: Int = 0,
+    val rusak: Int = 0,
+    val maintenance: Int = 0,
+)
+
+data class NotifItem(
+    val id: Int,
+    val slug: String,
+    val nama: String,
+    val jenis: String? = null,
+    val lokasi: String? = null,
+    val zonasi: String? = null,
+    val periode: String? = null,
+    @SerializedName("periode_id") val periodeId: Int = 0,
+    val badge: String? = null,
+    @SerializedName("updated_at") val updatedAt: String? = null,
+    val keterangan: String? = null,
+)
+
+data class NotifResponse(
+    val periode: String? = null,
+    val tab: String? = null,
+    val ringkasan: NotifRingkasan = NotifRingkasan(),
+    val regu: List<SimpleItem> = emptyList(),
+    val page: Int = 1,
+    val limit: Int = 10,
+    val pages: Int = 1,
+    val hits: Int = 0,
+    val items: List<NotifItem> = emptyList(),
 )
 
 // ===== Pengingat (reminders) =====
@@ -291,6 +462,8 @@ data class ReminderLogResponse(val items: List<ReminderLogItem>)
 data class ApproveRequest(val id: Int)
 data class RejectRequest(val id: Int, val catatan: String?)
 data class RecipientsActionRequest(val action: String, @SerializedName("user_id") val userId: Int)
+data class ReminderDeleteRequest(val id: Int? = null, val status: String? = null)
+
 data class SendReminderRequest(val action: String, @SerializedName("log_id") val logId: Int?)
 
 data class MessageResponse(
@@ -307,4 +480,193 @@ data class SendReminderResponse(
     val failed: Int?,
     val skipped: Int?,
     val total: Int?,
+)
+
+// ===== Laporan Harian (live) =====
+data class ReguListResponse(val items: List<SimpleItem> = emptyList())
+
+// ===== Kelola Regu =====
+data class ReguAnggota(
+    val id: Int,
+    val nama: String,
+    val level: String? = null,
+)
+
+data class ReguFull(
+    val id: Int,
+    val nama: String,
+    val keterangan: String? = null,
+    @SerializedName("jml_anggota") val jmlAnggota: Int = 0,
+    val anggota: List<ReguAnggota> = emptyList(),
+)
+
+data class ReguStats(
+    @SerializedName("total_regu") val totalRegu: Int = 0,
+    @SerializedName("total_anggota") val totalAnggota: Int = 0,
+    @SerializedName("regu_aktif") val reguAktif: Int = 0,
+)
+
+data class ReguResponse(
+    val items: List<ReguFull> = emptyList(),
+    val stats: ReguStats = ReguStats(),
+)
+
+data class ReguUser(
+    val id: Int,
+    val nama: String,
+    val username: String? = null,
+    val level: String? = null,
+    val terpilih: Boolean = false,
+    @SerializedName("regu_id") val reguId: Int? = null,
+)
+
+data class ReguAnggotaResponse(
+    val regu: SimpleItem? = null,
+    val items: List<ReguUser> = emptyList(),
+)
+
+data class LaporanHarianLive(
+    val tanggal: String = "",
+    @SerializedName("regu_id") val reguId: Int = 0,
+    val shift: String? = null,
+    @SerializedName("total_aset") val totalAset: Int = 0,
+    val checked: Int = 0,
+    val persen: Int = 0,
+    @SerializedName("log_table") val logTable: Boolean = true,
+    val summary: List<LaporanPenugasanRingkas> = emptyList(),
+    val items: List<LaporanBaris> = emptyList(),
+    // Pilihan form Cetak PDF.
+    val chiefs: List<String> = emptyList(),
+    val jabatan: List<String> = emptyList(),
+)
+
+data class LaporanPenugasanRingkas(
+    @SerializedName("penugasan_id") val penugasanId: Int = 0,
+    @SerializedName("penugasan_nama") val penugasanNama: String? = null,
+    @SerializedName("regu_nama") val reguNama: String? = null,
+    val total: Int = 0,
+    @SerializedName("checked_today") val checkedToday: Int = 0,
+)
+
+data class LaporanBaris(
+    @SerializedName("log_id") val logId: Int = 0,
+    val slug: String = "",
+    val nama: String = "",
+    val merek: String? = null,
+    val jenis: String? = null,
+    val lokasi: String? = null,
+    val pemeriksa: String? = null,
+    @SerializedName("checked_at") val checkedAt: String? = null,
+    @SerializedName("regu_nama") val reguNama: String? = null,
+    @SerializedName("penugasan_nama") val penugasanNama: String? = null,
+)
+
+// ===== Dashboard mobile (api/dashboard/mobile.php) =====
+data class DashboardMobile(
+    val summary: DashboardMobileSummary = DashboardMobileSummary(),
+    val coverage: CoverageBlock = CoverageBlock(),
+    val kategori: List<KategoriStat> = emptyList(),
+    val lokasi: List<LokasiStat> = emptyList(),
+    val maintenance: List<BulanStat> = emptyList(),
+    val inspeksi: InspeksiStat = InspeksiStat(),
+)
+
+data class DashboardMobileSummary(
+    @SerializedName("total_aset") val totalAset: Int = 0,
+    @SerializedName("total_lokasi") val totalLokasi: Int = 0,
+    @SerializedName("total_jenis") val totalJenis: Int = 0,
+    val terperiksa: Int = 0,
+    @SerializedName("belum_dicek") val belumDicek: Int = 0,
+)
+
+data class CoverageBlock(
+    val points: List<CoverageIns> = emptyList(),
+    val active: CoverageIns? = null,
+)
+
+data class CoverageIns(
+    val label: String = "",
+    val checked: Int = 0,
+    val total: Int = 0,
+    val pct: Int = 0,
+)
+
+data class KategoriStat(val nama: String = "", val total: Int = 0)
+data class LokasiStat(val nama: String = "", val total: Int = 0)
+data class BulanStat(val label: String = "", val total: Int = 0)
+
+data class InspeksiStat(
+    val lengkap: Int = 0,
+    val sebagian: Int = 0,
+    val belum: Int = 0,
+    val total: Int = 0,
+)
+
+// ===== Log aktivitas (api/logs/index.php) =====
+data class LogResponse(
+    val page: Int = 1,
+    val limit: Int = 10,
+    val total: Int = 0,
+    val pages: Int = 1,
+    val items: List<LogItem> = emptyList(),
+)
+
+data class LogItem(
+    val id: Int = 0,
+    val user: String = "",
+    val level: String = "",
+    val activity: String = "",
+    val description: String = "",
+    @SerializedName("created_at") val createdAt: String = "",
+)
+
+// ===== Peta sebaran aset (api/assets/map.php) =====
+data class AssetMapResponse(
+    val total: Int = 0,
+    @SerializedName("tanpa_koordinat") val tanpaKoordinat: Int = 0,
+    val items: List<AssetMapItem> = emptyList(),
+)
+
+data class AssetMapItem(
+    val id: Int = 0,
+    val nama: String = "",
+    val slug: String = "",
+    val status: String = "",
+    val category: String? = null,
+    val room: String? = null,
+    val periode: String? = null,
+    val lat: Double = 0.0,
+    val lng: Double = 0.0,
+)
+
+
+// ===== Manajemen Pengguna =====
+data class UserItem(
+    val id: Int,
+    @SerializedName("full_name") val fullName: String? = null,
+    val username: String? = null,
+    val email: String? = null,
+    val level: String? = null,
+    @SerializedName("regu_id") val reguId: Int? = null,
+    @SerializedName("regu_nama") val reguNama: String? = null,
+    @SerializedName("profile_url") val profileUrl: String? = null,
+    @SerializedName("is_active") val isActive: Int = 1,
+    @SerializedName("created_at") val createdAt: String? = null,
+    @SerializedName("updated_at") val updatedAt: String? = null,
+)
+
+data class UserStats(
+    val total: Int = 0,
+    val admin: Int = 0,
+    val user: Int = 0,
+    val baru: Int = 0,
+    val nonaktif: Int = 0,
+)
+
+data class UsersResponse(
+    val page: Int = 1,
+    val limit: Int = 10,
+    val total: Int = 0,
+    val items: List<UserItem> = emptyList(),
+    val stats: UserStats = UserStats(),
 )

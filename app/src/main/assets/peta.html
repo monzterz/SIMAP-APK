@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Peta Sebaran Aset</title>
+<link rel="stylesheet" href="leaflet/leaflet.css" />
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; background: #E9ECE7; }
+  #map { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; }
+  .pin { display: flex; align-items: center; justify-content: center; border-radius: 50%;
+         border: 2px solid #fff; color: #fff; font-size: 11px; font-weight: 700;
+         box-shadow: 0 3px 8px rgba(15,23,42,.35); }
+  .pin-aktif { background: #10B981; }
+  .pin-maintenance { background: #F59E0B; }
+  .pin-rusak { background: #1E293B; }
+  .pin-sel { outline: 4px solid rgba(244,63,94,.45); }
+  .leaflet-control-attribution { font-size: 9px; }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<script src="leaflet/leaflet.js"></script>
+<script>
+  var peta, ubin, lapisanZona, lapisanAset, terpilih = null;
+  var asetSemua = [], zonaSemua = [];
+  var mode = 'sebaran', zonaPilih = '', lantaiPilih = '';
+
+  function log(m) { if (window.Android && Android.onLog) Android.onLog(m); }
+
+  window.onerror = function (m, s, l) { log('JS error: ' + m + ' @' + (s || '') + ':' + (l || 0)); return false; };
+
+  function mulai() {
+    if (typeof L === 'undefined') { log('Leaflet tidak termuat'); return; }
+
+    var vh = Math.max(200, window.innerHeight || 0);
+    document.documentElement.style.height = vh + 'px';
+    document.body.style.height = vh + 'px';
+    var k = document.getElementById('map');
+    k.style.height = vh + 'px';
+    k.style.width = (window.innerWidth || 400) + 'px';
+
+    peta = L.map('map', { zoomControl: false, attributionControl: true }).setView([-3.4379, 114.7651], 17);
+    L.control.zoom({ position: 'topleft' }).addTo(peta);
+    ubin = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19, attribution: '&copy; OpenStreetMap'
+    }).addTo(peta);
+
+    lapisanZona = L.layerGroup().addTo(peta);
+    lapisanAset = L.layerGroup().addTo(peta);
+
+    setTimeout(function () { peta.invalidateSize(true); }, 250);
+    setTimeout(function () { peta.invalidateSize(true); render(); }, 1200);
+    window.addEventListener('resize', function () { peta.invalidateSize(true); });
+    window.addEventListener('orientationchange', function () { peta.invalidateSize(true); });
+    log('Peta siap');
+  }
+
+  /* ===== filter ===== */
+  function setFilter(m, z, l) {
+    mode = m || 'sebaran';
+    zonaPilih = z || '';
+    lantaiPilih = l || '';
+    render();
+  }
+
+  function zonaLolos(z) {
+    return !lantaiPilih || String(z.lantai || '') === String(lantaiPilih);
+  }
+
+  function titikDi(z, lat, lng) {
+    var p = z.poly || [], dalam = false;
+    for (var i = 0, j = p.length - 1; i < p.length; j = i++) {
+      var yi = p[i][0], xi = p[i][1], yj = p[j][0], xj = p[j][1];
+      if (((yi > lat) !== (yj > lat)) && (lng < (xj - xi) * (lat - yi) / (yj - yi) + xi)) dalam = !dalam;
+    }
+    return dalam;
+  }
+
+  function asetLolos(a) {
+    if (!zonaPilih && !lantaiPilih) return true;
+    for (var i = 0; i < zonaSemua.length; i++) {
+      var z = zonaSemua[i];
+      if (!zonaLolos(z)) continue;
+      if (zonaPilih && String(z.nama || '') !== zonaPilih) continue;
+      if ((z.poly || []).length > 2 && titikDi(z, a.lat, a.lng)) return true;
+    }
+    return false;
+  }
+
+  /* ===== render ===== */
+  function render() {
+    if (!lapisanZona || !lapisanAset) return;
+    lapisanZona.clearLayers();
+    lapisanAset.clearLayers();
+    terpilih = null;
+
+    var titikZona = [];
+    zonaSemua.forEach(function (z) {
+      if (!zonaLolos(z)) return;
+      if ((z.poly || []).length < 3) return;
+      var warna = z.warna || '#0ea5e9';
+      var aktif = !zonaPilih || String(z.nama || '') === zonaPilih;
+      var pol = L.polygon(z.poly, {
+        color: warna,
+        weight: aktif ? 2.4 : 1,
+        opacity: aktif ? 0.95 : 0.35,
+        fillColor: warna,
+        fillOpacity: aktif ? (mode === 'zonasi' ? 0.45 : 0.28) : 0.07
+      });
+      // Ketuk zona mana pun (lantai yang sama) untuk berpindah.
+      pol.on('click', function () { pilihZona(z); });
+      pol.addTo(lapisanZona);
+      if (aktif) z.poly.forEach(function (p) { titikZona.push(p); });
+    });
+
+    var titikAset = [];
+    if (mode === 'sebaran') {
+      asetSemua.forEach(function (a) {
+        if (!a.lat || !a.lng) return;
+        if (!asetLolos(a)) return;
+        var m = L.marker([a.lat, a.lng], { icon: ikonPin(a) });
+        m.on('click', function () { pilih(m, a); });
+        m.addTo(lapisanAset);
+        titikAset.push([a.lat, a.lng]);
+      });
+    }
+
+    var acuan = titikAset.length > 1 ? titikAset : titikZona;
+    if (acuan.length > 1) peta.fitBounds(acuan, { padding: [26, 26], maxZoom: 18 });
+    else if (acuan.length === 1) peta.setView(acuan[0], 18);
+
+    log('render mode=' + mode + ' titik=' + titikAset.length + ' zona=' + lapisanZona.getLayers().length);
+  }
+
+  function pilihZona(z) {
+    mode = 'sebaran';
+    zonaPilih = z.nama || '';
+    if (z.lantai) lantaiPilih = String(z.lantai);
+    render();
+    if (window.Android && Android.onZona) Android.onZona(zonaPilih, lantaiPilih);
+  }
+
+  function warnaPin(s) {
+    if (s === 'maintenance') return 'pin-maintenance';
+    if (s === 'rusak') return 'pin-rusak';
+    return 'pin-aktif';
+  }
+
+  function ikonPin(a) {
+    return L.divIcon({
+      className: '',
+      html: '<div class="pin ' + warnaPin(a.status) + '">' + (a.status === 'rusak' ? '!' : 'A') + '</div>',
+      iconSize: [22, 22], iconAnchor: [11, 11]
+    });
+  }
+
+  function pilih(marker, a) {
+    if (terpilih && terpilih.el) {
+      var lama = terpilih.el.getElement();
+      if (lama) { var pl = lama.querySelector('.pin'); if (pl) pl.classList.remove('pin-sel'); }
+    }
+    terpilih = { el: marker };
+    var el = marker.getElement();
+    if (el) { var pin = el.querySelector('.pin'); if (pin) pin.classList.add('pin-sel'); }
+    if (window.Android && Android.onPin) {
+      Android.onPin(a.slug || '', a.nama || '', a.room || '', a.category || '',
+                    a.status || '', a.periode || '');
+    }
+  }
+
+  /* assets = [{slug,nama,room,category,status,periode,lat,lng}] */
+  function setAssets(assets) {
+    asetSemua = (assets || []).slice();
+    if (peta) { peta.invalidateSize(true); render(); }
+  }
+
+  /* zones = [{nama,warna,lantai,poly:[[lat,lng],...]}] */
+  function setZones(zones) {
+    zonaSemua = (zones || []).slice();
+    if (peta) render();
+  }
+
+  function fokus(lat, lng) { if (peta && lat && lng) peta.setView([lat, lng], 18); }
+
+  /* Mode pratinjau kecil di layar Detail Aset: tanpa gestur, satu pin. */
+  function pratinjauAset(lat, lng, slug) {
+    if (!peta) return;
+    peta.dragging.disable();
+    peta.touchZoom.disable();
+    peta.doubleClickZoom.disable();
+    peta.scrollWheelZoom.disable();
+    peta.boxZoom.disable();
+    peta.keyboard.disable();
+    if (peta.zoomControl) peta.removeControl(peta.zoomControl);
+    lapisanZona.clearLayers();
+    lapisanAset.clearLayers();
+    if (lat && lng) {
+      L.marker([lat, lng], {
+        icon: L.divIcon({
+          className: '',
+          html: '<div class="pin pin-aktif" style="width:26px;height:26px">A</div>',
+          iconSize: [26, 26], iconAnchor: [13, 13]
+        })
+      }).addTo(lapisanAset);
+      peta.setView([lat, lng], 17);
+    }
+    setTimeout(function () { peta.invalidateSize(true); }, 300);
+    log('pratinjau ' + slug + ' @' + lat + ',' + lng);
+  }
+
+  function gantiTipe(satelit) {
+    if (!peta) return;
+    if (ubin) { peta.removeLayer(ubin); ubin = null; }
+    ubin = satelit
+      ? L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+          { maxZoom: 19, attribution: 'Tiles &copy; Esri' })
+      : L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+          { maxZoom: 19, attribution: '&copy; OpenStreetMap' });
+    ubin.addTo(peta);
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mulai);
+  else mulai();
+</script>
+</body>
+</html>

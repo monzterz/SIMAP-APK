@@ -15,6 +15,14 @@ fun mapError(code: String): String = when (code) {
     "bad_action" -> "Aksi tidak dikenali"
     "server_error" -> "Kesalahan server"
     "smtp_not_configured" -> "SMTP belum dikonfigurasi. Set dulu di web."
+    "missing_fields" -> "Nama dan regu wajib diisi"
+    "invalid_regu" -> "Regu tidak ditemukan"
+    "invalid_date" -> "Rentang tanggal tidak valid"
+    "invalid_zonasi" -> "Zonasi tidak ditemukan"
+    "missing_zonasi" -> "Pilih minimal satu zonasi"
+    "insert_failed" -> "Gagal menyimpan penugasan"
+    "update_failed" -> "Gagal memperbarui penugasan"
+    "delete_failed" -> "Gagal menghapus penugasan"
     else -> "Terjadi kesalahan ($code)"
 }
 

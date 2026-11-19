@@ -32,8 +32,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arffsnia.simap.SimapApp
 import com.arffsnia.simap.ui.admin.AdminDashboardScreen
+import com.arffsnia.simap.ui.admin.DataAsetScreen
+import com.arffsnia.simap.ui.admin.LaporanAsetScreen
+import com.arffsnia.simap.ui.admin.PenggunaScreen
+import com.arffsnia.simap.ui.admin.ReguScreen
+import com.arffsnia.simap.ui.admin.LaporanHarianScreen
 import com.arffsnia.simap.ui.admin.MissingScreen
+import com.arffsnia.simap.ui.admin.NotifikasiScreen
+import com.arffsnia.simap.ui.admin.PetaSebaranScreen
 import com.arffsnia.simap.ui.admin.PengingatScreen
+import com.arffsnia.simap.ui.admin.PengajuanDetailScreen
 import com.arffsnia.simap.ui.admin.PenugasanDetailScreen
 import com.arffsnia.simap.ui.admin.PenugasanScreen
 import com.arffsnia.simap.ui.admin.ValidasiScreen
@@ -53,10 +61,17 @@ sealed class Screen {
     object Scan : Screen()
     object Assets : Screen()
     object Missing : Screen()
+    object Notif : Screen()
     object More : Screen()
     object Penugasan : Screen()
     object Validasi : Screen()
     object Pengingat : Screen()
+    object LaporanHarian : Screen()
+    object PetaSebaran : Screen()
+    object DataAset : Screen()
+    object LaporanAset : Screen()
+    object Regu : Screen()
+    object Pengguna : Screen()
     data class Detail(val slug: String) : Screen()
     data class Inspection(
         val assetId: Int,
@@ -65,6 +80,7 @@ sealed class Screen {
         val categoryId: Int,
     ) : Screen()
     data class PenugasanDetail(val id: Int) : Screen()
+    data class PengajuanDetail(val item: com.arffsnia.simap.data.dto.ValidasiItem) : Screen()
     object Sync : Screen()
 }
 
@@ -120,6 +136,8 @@ fun AppRoot() {
                         AdminDashboardScreen(
                             onMissing = { push(Screen.Missing) },
                             onLogout = { logout() },
+                            onNotif = { push(Screen.Notif) },
+                            onProfile = { push(Screen.More) },
                         )
                     } else {
                         HomeScreen(
@@ -172,20 +190,85 @@ fun AppRoot() {
                 is Screen.More -> MoreScreen(
                     onSync = { push(Screen.Sync) },
                     onLogout = { logout() },
+                    onNotif = { push(Screen.Notif) },
+                    onLaporan = { push(Screen.LaporanHarian) },
+                    onPeta = { push(Screen.PetaSebaran) },
+                    onPengingat = { push(Screen.Pengingat) },
+                    onLaporanAset = { push(Screen.LaporanAset) },
+                    onRegu = { push(Screen.Regu) },
+                    onPengguna = { push(Screen.Pengguna) },
+                )
+
+                is Screen.Regu -> ReguScreen(onBack = { pop() })
+
+                is Screen.Pengguna -> PenggunaScreen(onBack = { pop() })
+
+                is Screen.LaporanAset -> LaporanAsetScreen(
+                    onOpen = { slug -> push(Screen.Detail(slug)) },
+                    onBack = { pop() },
+                    onNotif = { push(Screen.Notif) },
+                    onProfile = { push(Screen.More) },
+                )
+
+                is Screen.PetaSebaran -> PetaSebaranScreen(
+                    onBack = { pop() },
+                    onOpen = { slug -> push(Screen.Detail(slug)) },
+                    onNotif = { push(Screen.Notif) },
+                    onProfile = { push(Screen.More) },
+                )
+
+                is Screen.LaporanHarian -> LaporanHarianScreen(
+                    onBack = { pop() },
+                    onNotif = { push(Screen.Notif) },
+                    onProfile = { push(Screen.More) },
+                )
+
+                is Screen.DataAset -> DataAsetScreen(
+                    onOpen = { slug -> push(Screen.Detail(slug)) },
+                    onNotif = { push(Screen.Notif) },
+                    onProfile = { push(Screen.More) },
                 )
 
                 is Screen.Penugasan -> PenugasanScreen(
                     onOpen = { id -> push(Screen.PenugasanDetail(id)) },
+                    onNotif = { push(Screen.Notif) },
+                    onProfile = { push(Screen.More) },
+                )
+
+                is Screen.Notif -> NotifikasiScreen(
+                    onOpen = { slug -> push(Screen.Detail(slug)) },
+                    onProfile = { push(Screen.More) },
                 )
 
                 is Screen.PenugasanDetail -> PenugasanDetailScreen(
                     id = current.id,
                     onBack = { pop() },
+                    onOpenAsset = { slug -> push(Screen.Detail(slug)) },
+                    onPeriksa = { assetId, slug, nama, categoryId ->
+                        push(Screen.Inspection(assetId, slug, nama, categoryId))
+                    },
+                    onNotif = { push(Screen.Notif) },
+                    onProfile = { push(Screen.More) },
                 )
 
-                is Screen.Validasi -> ValidasiScreen()
+                is Screen.Validasi -> ValidasiScreen(
+                    onOpen = { push(Screen.PengajuanDetail(it)) },
+                    onNotif = { push(Screen.Notif) },
+                    onProfile = { push(Screen.More) },
+                )
 
-                is Screen.Pengingat -> PengingatScreen()
+                is Screen.PengajuanDetail -> PengajuanDetailScreen(
+                    item = current.item,
+                    onBack = { pop() },
+                    onChanged = { pop() },
+                    onNotif = { push(Screen.Notif) },
+                    onProfile = { push(Screen.More) },
+                )
+
+                is Screen.Pengingat -> PengingatScreen(
+                    onNotif = { push(Screen.Notif) },
+                    onProfile = { push(Screen.More) },
+                )
 
                 is Screen.Sync -> SyncScreen(onBack = { pop() })
             }

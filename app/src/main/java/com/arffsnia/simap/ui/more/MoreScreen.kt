@@ -16,8 +16,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Autorenew
+import androidx.compose.material.icons.rounded.Description
+import androidx.compose.material.icons.rounded.Email
+import androidx.compose.material.icons.rounded.Groups
+import androidx.compose.material.icons.rounded.ManageAccounts
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Map
+import androidx.compose.material.icons.rounded.Notifications
+import androidx.compose.material.icons.rounded.ShowChart
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -38,7 +44,17 @@ import com.arffsnia.simap.ui.theme.Slate50
 import com.arffsnia.simap.ui.theme.Teal
 
 @Composable
-fun MoreScreen(onSync: () -> Unit, onLogout: () -> Unit) {
+fun MoreScreen(
+    onSync: () -> Unit,
+    onLogout: () -> Unit,
+    onNotif: () -> Unit,
+    onLaporan: () -> Unit = {},
+    onPeta: () -> Unit = {},
+    onPengingat: () -> Unit = {},
+    onLaporanAset: () -> Unit = {},
+    onRegu: () -> Unit = {},
+    onPengguna: () -> Unit = {},
+) {
     val app = LocalContext.current.applicationContext as SimapApp
     val user = remember { app.authRepo.currentUser() }
     val name = user?.fullName ?: user?.username ?: "User"
@@ -70,9 +86,34 @@ fun MoreScreen(onSync: () -> Unit, onLogout: () -> Unit) {
             }
         }
 
+        if (role.isSuper || role.isAdminRegu) {
+            MenuRow(Icons.Rounded.ShowChart, "Laporan Harian", "Pengecekan APAR per hari", onClick = onLaporan)
+        }
+        if (role.isSuper) {
+            MenuRow(Icons.Rounded.Email, "Pengingat", "Pratinjau & kirim pengingat", onClick = onPengingat)
+            MenuRow(
+                Icons.Rounded.Description,
+                "Laporan Data Aset",
+                "Rekap aset + ekspor CSV/PDF",
+                onClick = onLaporanAset,
+            )
+            MenuRow(
+                Icons.Rounded.Groups,
+                "Kelola Regu",
+                "Regu & anggota penugasan",
+                onClick = onRegu,
+            )
+            MenuRow(
+                Icons.Rounded.ManageAccounts,
+                "Pengguna",
+                "Akun, peran & status aktif",
+                onClick = onPengguna,
+            )
+        }
+        MenuRow(Icons.Rounded.Notifications, "Pusat Notifikasi", "Alert aset & periode", onClick = onNotif)
         MenuRow(Icons.Rounded.Autorenew, "Sinkronisasi", "Semua terkirim", onClick = onSync)
         MenuRow(Icons.Rounded.History, "Riwayat cek", "Akan datang")
-        MenuRow(Icons.Rounded.Map, "Peta sebaran", "Akan datang")
+        MenuRow(Icons.Rounded.Map, "Peta sebaran", "Titik aset di peta", onClick = onPeta)
         Spacer(Modifier.height(8.dp))
         MenuRow(
             icon = Icons.Rounded.Autorenew,

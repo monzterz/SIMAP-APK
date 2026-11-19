@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Logo pinwheel SIMAP (4 sayap). Diekstrak dari desain web resmi. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="28dp"
+    android:height="28dp"
+    android:viewportWidth="40"
+    android:viewportHeight="40">
+
+    <path
+        android:fillColor="#F472B6"
+        android:pathData="M12,6C15.3137,6 18,8.68629 18,12V18H12C8.68629,18 6,15.3137 6,12C6,8.68629 8.68629,6 12,6Z" />
+
+    <path
+        android:fillColor="#FBBF24"
+        android:pathData="M34,12C34,15.3137 31.3137,18 28,18H22V12C22,8.68629 24.6863,6 28,6C31.3137,6 34,8.68629 34,12Z" />
+
+    <path
+        android:fillColor="#38BDF8"
+        android:pathData="M28,34C24.6863,34 22,31.3137 22,28V22H28C31.3137,22 34,24.6863 34,28C34,31.3137 31.3137,34 28,34Z" />
+
+    <path
+        android:fillColor="#34D399"
+        android:pathData="M6,28C6,24.6863 8.68629,22 12,22H18V28C18,31.3137 15.3137,34 12,34C8.68629,34 6,31.3137 6,28Z" />
+</vector>

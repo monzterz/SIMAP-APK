@@ -35,8 +35,8 @@ object ApiClient {
             .addInterceptor(auth)
             .addInterceptor(logging)
             .connectTimeout(30, TimeUnit.SECONDS)
-            .readTimeout(60, TimeUnit.SECONDS)
-            .writeTimeout(60, TimeUnit.SECONDS)
+            .readTimeout(120, TimeUnit.SECONDS)   // PDF laporan harian (Dompdf) bisa lambat
+            .writeTimeout(120, TimeUnit.SECONDS)
             .build()
 
         return Retrofit.Builder()

@@ -1,12 +1,15 @@
 package com.arffsnia.simap.ui.admin
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Logout
@@ -17,10 +20,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.arffsnia.simap.R
 import com.arffsnia.simap.ui.theme.Good
 import com.arffsnia.simap.ui.theme.Sky
 import com.arffsnia.simap.ui.theme.Slate200
@@ -88,12 +96,19 @@ fun ProgressBar(percent: Int, modifier: Modifier = Modifier) {
 
 @Composable
 fun ScreenHero(name: String, subtitle: String, onLogout: () -> Unit) {
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Brush.verticalGradient(listOf(Teal, Sky)))
-            .padding(start = 20.dp, end = 20.dp, top = 28.dp, bottom = 20.dp),
+            .background(Brush.verticalGradient(listOf(Teal, Sky))),
     ) {
+        OrnamenHeader(
+            Modifier.align(Alignment.BottomEnd).offset(x = 28.dp, y = 20.dp),
+            ukuran = 140.dp,
+            alpha = 0.14f,
+        )
+        Column(
+            modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 28.dp, bottom = 20.dp),
+        ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
@@ -117,5 +132,24 @@ fun ScreenHero(name: String, subtitle: String, onLogout: () -> Unit) {
                 Icon(Icons.Rounded.Logout, "Keluar", tint = Color.White)
             }
         }
+        }
     }
+}
+
+/**
+ * Ornamen header: watermark grf.png (putih transparan) dipakai seragam di semua banner gradien.
+ * Taruh di dalam Box banner yang sudah punya clip(RoundedCornerShape(...)) supaya ikut terpotong.
+ */
+@Composable
+fun OrnamenHeader(
+    modifier: Modifier = Modifier,
+    ukuran: Dp = 128.dp,
+    alpha: Float = 0.18f,
+) {
+    Image(
+        painter = painterResource(R.drawable.grf),
+        contentDescription = null,
+        modifier = modifier.size(ukuran).alpha(alpha),
+        contentScale = ContentScale.Fit,
+    )
 }
