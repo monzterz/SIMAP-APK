@@ -91,6 +91,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.ui.text.PlatformTextStyle
@@ -382,25 +383,27 @@ internal fun TopBar(
                 .padding(top = 10.dp, bottom = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            androidx.compose.foundation.Image(
-                painter = painterResource(R.drawable.ic_logo_pinwheel),
+            // Logo resmi: wordmark SIMAP + InJourney Airports
+            Image(
+                painter = painterResource(R.drawable.simap),
                 contentDescription = "Logo SIMAP",
-                modifier = Modifier.size(26.dp),
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.height(22.dp),
             )
-            Spacer(Modifier.width(8.dp))
-            Column {
-                Row {
-                    Text("SIM", fontSize = 19.sp, fontWeight = FontWeight.ExtraBold, color = Slate900)
-                    Text("AP", fontSize = 19.sp, fontWeight = FontWeight.ExtraBold, color = SimapBrandEnd)
-                }
-                Text(
-                    "INJOURNEY AIRPORTS",
-                    fontSize = 8.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Slate400,
-                    letterSpacing = 0.8.sp,
-                )
-            }
+            Spacer(Modifier.width(10.dp))
+            Box(
+                Modifier
+                    .width(1.dp)
+                    .height(20.dp)
+                    .background(Slate200),
+            )
+            Spacer(Modifier.width(10.dp))
+            Image(
+                painter = painterResource(R.drawable.logoin),
+                contentDescription = "InJourney Airports",
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.height(26.dp),
+            )
 
             Spacer(Modifier.weight(1f))
 

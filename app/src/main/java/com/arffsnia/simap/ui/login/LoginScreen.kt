@@ -54,11 +54,13 @@ fun LoginScreen(onLoggedIn: () -> Unit, vm: LoginViewModel = viewModel()) {
         modifier = Modifier
             .fillMaxSize()
             .background(
+                // Hijau hanya tipis di dasar layar; bagian atas tetap putih bersih.
                 Brush.verticalGradient(
                     colorStops = arrayOf(
                         0.0f to Color.White,
-                        0.32f to Color(0xFFD6F1EC),
-                        0.64f to Color(0xFF8FDCD1),
+                        0.60f to Color.White,
+                        0.78f to Color(0xFFEAF8F5),
+                        0.90f to Color(0xFFB7E7DF),
                         1.0f to Teal,
                     ),
                 ),
@@ -75,19 +77,19 @@ fun LoginScreen(onLoggedIn: () -> Unit, vm: LoginViewModel = viewModel()) {
         ) {
             Spacer(Modifier.height(32.dp))
 
-            // Logo bertumpuk: SIMAP (atas) + Syamsudin Noor (bawah), langsung di gradient
+            // Logo bertumpuk: SIMAP (atas) + InJourney Airports (bawah), langsung di gradient
             AsyncImage(
                 model = R.drawable.simap,
                 contentDescription = "SIMAP",
                 contentScale = ContentScale.Fit,
-                modifier = Modifier.height(46.dp),
+                modifier = Modifier.height(42.dp),
             )
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(12.dp))
             AsyncImage(
-                model = R.drawable.bdjint,
-                contentDescription = "Syamsudin Noor International Airport",
+                model = R.drawable.logoin,
+                contentDescription = "InJourney Airports",
                 contentScale = ContentScale.Fit,
-                modifier = Modifier.width(175.dp),
+                modifier = Modifier.width(146.dp),
             )
             Spacer(Modifier.height(20.dp))
             Text(
@@ -174,25 +176,25 @@ fun LoginScreen(onLoggedIn: () -> Unit, vm: LoginViewModel = viewModel()) {
 
             Spacer(Modifier.height(40.dp))
 
-            // Footer (white text, terlihat di atas gradasi teal bawah)
+            // Footer: teks gelap karena area bawah kini didominasi putih
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     "Sistem Informasi Manajemen Alat Pemadam (SIMAP)",
                     style = MaterialTheme.typography.labelSmall,
-                    color = Color.White,
+                    color = Color(0xFF0F766E),
                     fontWeight = FontWeight.SemiBold,
                     textAlign = TextAlign.Center,
                 )
                 Text(
                     "Copyright © 2026 PT Angkasa Pura Indonesia",
                     style = MaterialTheme.typography.labelSmall,
-                    color = Color.White.copy(alpha = 0.9f),
+                    color = Color(0xFF64748B),
                     textAlign = TextAlign.Center,
                 )
                 Text(
                     "All Rights Reserved",
                     style = MaterialTheme.typography.labelSmall,
-                    color = Color.White.copy(alpha = 0.7f),
+                    color = Color(0xFF94A3B8),
                 )
             }
             Spacer(Modifier.height(24.dp))

@@ -582,6 +582,10 @@ data class DashboardMobileSummary(
 data class CoverageBlock(
     val points: List<CoverageIns> = emptyList(),
     val active: CoverageIns? = null,
+    /** Semua periode yang punya data inspeksi (multi-tahun) — untuk tab Pertahun. */
+    val all: List<CoverageIns> = emptyList(),
+    /** Daftar tahun (terbaru dulu) yang tersedia di [all]. */
+    val years: List<Int> = emptyList(),
 )
 
 data class CoverageIns(

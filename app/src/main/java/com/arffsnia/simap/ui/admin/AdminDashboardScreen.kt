@@ -166,7 +166,11 @@ fun AdminDashboardScreen(
                             val d = data!!
                             MetricDash(d)
                             BarisBelumDicek(d.summary.belumDicek, onMissing)
-                            KartuCoverage(d.coverage.points, d.coverage.active)
+                            KartuCoverage(
+                                points = d.coverage.all.ifEmpty { d.coverage.points },
+                                active = d.coverage.active,
+                                years = d.coverage.years,
+                            )
                             KartuDistribusi(d.kategori)
                             KartuMaintenance(d.maintenance)
                             KartuInspeksi(d.inspeksi)

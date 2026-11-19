@@ -3,6 +3,7 @@ package com.arffsnia.simap.ui.admin
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
@@ -70,10 +72,23 @@ internal fun KartuDash(
 }
 
 @Composable
-internal fun KartuCoverage(points: List<CoverageIns>, active: CoverageIns?) {
+internal fun KartuCoverage(points: List<CoverageIns>, active: CoverageIns?, years: List<Int> = emptyList()) {
+    val tahunAktif = active?.label?.take(4)?.toIntOrNull()
+    val daftarTahun = years.ifEmpty {
+        points.mapNotNull { it.label.take(4).toIntOrNull() }.distinct().sortedDescending()
+    }
     var mode by remember { mutableStateOf("aktif") }
-    val tahun = active?.label?.take(4) ?: ""
-    val tampil = if (mode == "aktif" && tahun.isNotBlank()) points.filter { it.label.startsWith(tahun) } else points
+    var pilihTahun by remember { mutableStateOf(0) }
+    // Default tab Pertahun: tahun lalu (kalau ada), supaya langsung kelihatan perbandingan.
+    val tahunTampil = if (pilihTahun in daftarTahun) pilihTahun
+    else (daftarTahun.firstOrNull { it != tahunAktif } ?: tahunAktif ?: 0)
+
+    val tampil = when (mode) {
+        "aktif" -> if (tahunAktif == null) points
+        else points.filter { it.label.take(4).toIntOrNull() == tahunAktif }
+        "tahun" -> points.filter { it.label.take(4).toIntOrNull() == tahunTampil }
+        else -> points.takeLast(8)
+    }
 
     KartuDash("Tren Coverage Inspeksi", "% aset dicek tiap periode") {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -83,18 +98,56 @@ internal fun KartuCoverage(points: List<CoverageIns>, active: CoverageIns?) {
                     .background(Color(0xFFF1F5F9))
                     .padding(2.dp),
             ) {
-                TabKecil("${tahun.ifBlank { "Tahun" }} (Aktif)", mode == "aktif") { mode = "aktif" }
+                TabKecil("${tahunAktif ?: "Tahun"} (Aktif)", mode == "aktif") { mode = "aktif" }
                 TabKecil("Semua", mode == "semua") { mode = "semua" }
+                TabKecil("Pertahun", mode == "tahun") { mode = "tahun" }
             }
             Spacer(Modifier.weight(1f))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.size(5.dp).background(Color(0xFF10B981), RoundedCornerShape(999.dp)))
-                Spacer(Modifier.width(4.dp))
-                Text("Periode Berjalan", fontSize = 8.sp, fontWeight = FontWeight.Bold, color = Color(0xFF047857))
+            if (mode == "aktif") {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.size(5.dp).background(Color(0xFF10B981), RoundedCornerShape(999.dp)))
+                    Spacer(Modifier.width(4.dp))
+                    Text("Periode Berjalan", fontSize = 8.sp, fontWeight = FontWeight.Bold, color = Color(0xFF047857))
+                }
             }
         }
 
-        if (active != null) {
+        // Pemilih tahun (hanya di tab Pertahun)
+        if (mode == "tahun" && daftarTahun.isNotEmpty()) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                daftarTahun.forEach { th ->
+                    val dipilih = th == tahunTampil
+                    Text(
+                        th.toString(),
+                        fontSize = 8.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (dipilih) Color.White else DashSlate500,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(999.dp))
+                            .background(if (dipilih) Color(0xFF0D9488) else Color(0xFFF1F5F9))
+                            .clickable { pilihTahun = th }
+                            .padding(horizontal = 10.dp, vertical = 3.dp),
+                    )
+                }
+            }
+        }
+
+        if (mode == "tahun") {
+            val rata = if (tampil.isEmpty()) 0 else tampil.sumOf { it.pct } / tampil.size
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text("Tahun $tahunTampil", fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, color = Slate900)
+                Spacer(Modifier.weight(1f))
+                Text("${tampil.size} periode · rata-rata $rata%", fontSize = 9.sp, color = DashSlate500)
+            }
+        }
+
+        if (active != null && mode != "tahun") {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -142,18 +195,22 @@ internal fun KartuCoverage(points: List<CoverageIns>, active: CoverageIns?) {
             }
         }
 
-        LineChart(points = tampil, aktif = active != null && mode == "aktif")
+        if (mode == "tahun" && tampil.isEmpty()) {
+            Text("Belum ada inspeksi tercatat di tahun ini.", fontSize = 9.sp, color = DashSlate500)
+        } else {
+            LineChart(points = tampil, aktif = active != null && mode == "aktif")
 
-        Row(Modifier.fillMaxWidth()) {
-            tampil.forEach { p ->
-                Text(
-                    p.label.replace(" ", "\n"),
-                    fontSize = 7.sp,
-                    color = DashSlate500,
-                    maxLines = 2,
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                    modifier = Modifier.weight(1f),
-                )
+            Row(Modifier.fillMaxWidth()) {
+                tampil.forEach { p ->
+                    Text(
+                        p.label.replace(" ", "\n"),
+                        fontSize = 7.sp,
+                        color = DashSlate500,
+                        maxLines = 2,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
             }
         }
     }
